@@ -1,4 +1,4 @@
- import React, { useState, useRef, useEffect } from 'react';
+ import React, { useState, useRef, useCallback } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 
 interface DraggablePanelProps {
@@ -6,8 +6,10 @@ interface DraggablePanelProps {
   initialHeight?: number;
   maxHeight?: number;
   minHeight?: number;
+  snapPoints?: number[];
   className?: string;
   onHeightChange?: (height: number) => void;
+  onSnapPointChange?: (snapIndex: number) => void;
 }
 
 export const DraggablePanel: React.FC<DraggablePanelProps> = ({
@@ -15,14 +17,39 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
   initialHeight = 400,
   maxHeight = 600,
   minHeight = 120,
+  snapPoints = [],
   className = '',
-  onHeightChange
+  onHeightChange,
+  onSnapPointChange
 }) => {
+  const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const defaultSnapPoints = snapPoints.length > 0 ? snapPoints : [
+    Math.round(screenHeight * 0.25),
+    Math.round(screenHeight * 0.6),
+    screenHeight - 80
+  ];
+
   const [height, setHeight] = useState(initialHeight);
+  const [currentSnapIndex, setCurrentSnapIndex] = useState(1);
   const panelRef = useRef<HTMLDivElement>(null);
   const y = useMotionValue(0);
 
   const backgroundOpacity = useTransform(y, [-200, 0], [0.3, 0.1]);
+
+  const findClosestSnapPoint = useCallback((currentHeight: number) => {
+    let closest = 0;
+    let minDistance = Math.abs(defaultSnapPoints[0] - currentHeight);
+
+    defaultSnapPoints.forEach((point, index) => {
+      const distance = Math.abs(point - currentHeight);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = index;
+      }
+    });
+
+    return closest;
+  }, [defaultSnapPoints]);
 
   const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const newHeight = height - info.delta.y;
@@ -37,17 +64,25 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
 
     if (Math.abs(velocity) > 300) {
       if (velocity > 0) {
-        targetHeight = minHeight;
+        const currentIndex = findClosestSnapPoint(height);
+        targetHeight = currentIndex > 0 ? defaultSnapPoints[currentIndex - 1] : defaultSnapPoints[0];
       } else {
-        targetHeight = maxHeight;
+        const currentIndex = findClosestSnapPoint(height);
+        targetHeight = currentIndex < defaultSnapPoints.length - 1
+          ? defaultSnapPoints[currentIndex + 1]
+          : defaultSnapPoints[defaultSnapPoints.length - 1];
       }
     } else {
-      const midPoint = (minHeight + maxHeight) / 2;
-      targetHeight = height > midPoint ? maxHeight : minHeight;
+      const closestIndex = findClosestSnapPoint(height);
+      targetHeight = defaultSnapPoints[closestIndex];
     }
 
+    targetHeight = Math.max(minHeight, Math.min(maxHeight, targetHeight));
     setHeight(targetHeight);
+    const snapIndex = findClosestSnapPoint(targetHeight);
+    setCurrentSnapIndex(snapIndex);
     onHeightChange?.(targetHeight);
+    onSnapPointChange?.(snapIndex);
   };
 
   return (

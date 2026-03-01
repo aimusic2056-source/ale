@@ -6,6 +6,7 @@ import { DraggablePanel } from '../components/DraggablePanel';
 import { ScrollableSection } from '../components/ScrollableSection';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { MapBackground } from '../components/MapBackground';
+import { AnimatedSearchHeader } from '../components/AnimatedSearchHeader';
 import { recentSearches } from '../data/mockData';
 import { useRideContext } from '../contexts/RideContext';
 
@@ -16,7 +17,12 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
   const navigate = useNavigate();
   const [showPromo, setShowPromo] = useState(true);
+  const [panelHeight, setPanelHeight] = useState(450);
+  const [snapIndex, setSnapIndex] = useState(1);
   const { isRideActive, rideStatus } = useRideContext();
+
+  const maxPanelHeight = 600;
+  const minPanelHeight = 175;
 
   const handleNavigationBlock = (destination: string) => {
     const message = rideStatus === 'pending'
@@ -114,24 +120,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
         </motion.div>
       )}
 
-      <DraggablePanel initialHeight={450} maxHeight={600} minHeight={175}>
+      <DraggablePanel
+        initialHeight={450}
+        maxHeight={maxPanelHeight}
+        minHeight={minPanelHeight}
+        onHeightChange={setPanelHeight}
+        onSnapPointChange={setSnapIndex}
+      >
         <div className="space-y-6">
-          {/* Let's go places header */}
-          <motion.h1 
+          {/* Let's go places header - fades out as panel compresses */}
+          <motion.h1
             className="text-3xl font-bold text-gray-900 mt-4"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            animate={{
+              opacity: snapIndex > 0 ? 1 : 0,
+              y: snapIndex > 0 ? 0 : -10
+            }}
+            transition={{ duration: 0.3 }}
           >
             Let's go places.
           </motion.h1>
 
           {/* Service buttons */}
-          <motion.div 
+          <motion.div
             className="grid grid-cols-3 gap-4"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            animate={{
+              opacity: snapIndex > 0 ? 1 : 0,
+              y: snapIndex > 0 ? 0 : 10
+            }}
+            transition={{ delay: 0.1, duration: 0.3 }}
           >
             {serviceButtons.map((service, index) => (
               <motion.button
@@ -156,12 +174,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
             ))}
           </motion.div>
 
-          {/* Search box */}
-          <motion.div 
-            className="space-y-4"
+          {/* Search box - only visible when panel is full height */}
+          <motion.div
+            className={`space-y-4 ${snapIndex <= 0 ? 'hidden' : ''}`}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            animate={{
+              opacity: snapIndex > 0 ? 1 : 0,
+              y: snapIndex > 0 ? 0 : 20
+            }}
+            transition={{ delay: 0.2, duration: 0.3 }}
           >
             <div className="flex space-x-3">
               <div className="flex-1 relative">
@@ -206,6 +227,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
           </motion.div>
         </div>
       </DraggablePanel>
+
+      {/* Sticky search header when panel is compressed */}
+      {snapIndex <= 0 && (
+        <AnimatedSearchHeader
+          panelHeight={panelHeight}
+          maxHeight={maxPanelHeight}
+          minHeight={minPanelHeight}
+          onWhereToClick={handleWhereToClick}
+          onScheduleClick={() => navigate('/schedule-ride')}
+        />
+      )}
 
       <BottomNavigation />
     </div>
