@@ -299,7 +299,7 @@ export const YourRoute: React.FC<YourRouteProps> = ({ onRouteComplete }) => {
               if (serviceType === 'ride') {
                 navigate('/');
               } else {
-                navigate('/aletwende-send');
+                navigate(-1);
               }
             }}
             className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"

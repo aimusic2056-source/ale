@@ -174,9 +174,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
             ))}
           </motion.div>
 
-          {/* Search box - only visible when panel is full height */}
+          {/* Search box - animates based on panel height */}
           <motion.div
-            className={`space-y-4 ${snapIndex <= 0 ? 'hidden' : ''}`}
+            className={`space-y-4 transition-all duration-200 ${snapIndex <= 0 ? 'opacity-0 pointer-events-none' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{
               opacity: snapIndex > 0 ? 1 : 0,
@@ -203,27 +203,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
             </div>
 
             {/* Recent searches */}
-            <ScrollableSection maxHeight="max-h-40">
-              <div className="space-y-2">
-                {recentSearches.map((search, index) => (
-                  <motion.button
-                    key={search.id}
-                    onClick={() => handleRecentAddressClick(search.address)}
-                    className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Clock className="text-gray-400 flex-shrink-0" size={20} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{search.address}</p>
-                      <p className="text-sm text-gray-500 truncate">{search.description}</p>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </ScrollableSection>
+            {snapIndex > 0 && (
+              <ScrollableSection maxHeight="max-h-40">
+                <div className="space-y-2">
+                  {recentSearches.map((search, index) => (
+                    <motion.button
+                      key={search.id}
+                      onClick={() => handleRecentAddressClick(search.address)}
+                      className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Clock className="text-gray-400 flex-shrink-0" size={20} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{search.address}</p>
+                        <p className="text-sm text-gray-500 truncate">{search.description}</p>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </ScrollableSection>
+            )}
           </motion.div>
         </div>
       </DraggablePanel>
