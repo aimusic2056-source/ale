@@ -10,7 +10,6 @@ interface DraggablePanelProps {
   className?: string;
   onHeightChange?: (height: number) => void;
   onSnapPointChange?: (snapIndex: number) => void;
-  renderSearchBox?: (animationProgress: number) => React.ReactNode;
 }
 
 export const DraggablePanel: React.FC<DraggablePanelProps> = ({

@@ -6,7 +6,6 @@ import { DraggablePanel } from '../components/DraggablePanel';
 import { ScrollableSection } from '../components/ScrollableSection';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { MapBackground } from '../components/MapBackground';
-import { AnimatedSearchHeader } from '../components/AnimatedSearchHeader';
 import { recentSearches } from '../data/mockData';
 import { useRideContext } from '../contexts/RideContext';
 
@@ -127,10 +126,62 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
         onHeightChange={setPanelHeight}
         onSnapPointChange={setSnapIndex}
       >
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* Search box - always visible, positioned right below handle */}
+          <motion.div
+            className="space-y-4 px-0"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          >
+            <div className="flex space-x-3 items-center">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <button
+                  onClick={handleWhereToClick}
+                  className="w-full bg-gray-100 rounded-xl pl-12 pr-16 py-4 text-left text-gray-500 hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Where to?
+                </button>
+              </div>
+              <motion.button
+                onClick={() => navigate('/schedule-ride')}
+                className="bg-gray-100 rounded-xl p-4 hover:bg-gray-200 transition-colors flex-shrink-0"
+                whileTap={{ scale: 0.95 }}
+              >
+                <Calendar className="text-gray-600" size={20} />
+              </motion.button>
+            </div>
+
+            {/* Recent searches - only show when panel is expanded */}
+            {snapIndex > 0 && (
+              <ScrollableSection maxHeight="max-h-32">
+                <div className="space-y-2">
+                  {recentSearches.map((search, index) => (
+                    <motion.button
+                      key={search.id}
+                      onClick={() => handleRecentAddressClick(search.address)}
+                      className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + index * 0.08 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Clock className="text-gray-400 flex-shrink-0" size={18} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{search.address}</p>
+                        <p className="text-xs text-gray-500 truncate">{search.description}</p>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </ScrollableSection>
+            )}
+          </motion.div>
+
           {/* Let's go places header - fades out as panel compresses */}
           <motion.h1
-            className="text-3xl font-bold text-gray-900 mt-4"
+            className="text-3xl font-bold text-gray-900 mt-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{
               opacity: snapIndex > 0 ? 1 : 0,
@@ -173,73 +224,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
               </motion.button>
             ))}
           </motion.div>
-
-          {/* Search box - animates based on panel height */}
-          <motion.div
-            className={`space-y-4 transition-all duration-200 ${snapIndex <= 0 ? 'opacity-0 pointer-events-none' : ''}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{
-              opacity: snapIndex > 0 ? 1 : 0,
-              y: snapIndex > 0 ? 0 : 20
-            }}
-            transition={{ delay: 0.2, duration: 0.3 }}
-          >
-            <div className="flex space-x-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <button
-                  onClick={handleWhereToClick}
-                  className="w-full bg-gray-100 rounded-xl pl-12 pr-4 py-4 text-left text-gray-500 hover:bg-gray-200 transition-colors"
-                >
-                  Where to?
-                </button>
-              </div>
-              <button
-                onClick={() => navigate('/schedule-ride')}
-                className="bg-gray-100 rounded-xl p-4 hover:bg-gray-200 transition-colors"
-              >
-                <Calendar className="text-gray-600" size={20} />
-              </button>
-            </div>
-
-            {/* Recent searches */}
-            {snapIndex > 0 && (
-              <ScrollableSection maxHeight="max-h-40">
-                <div className="space-y-2">
-                  {recentSearches.map((search, index) => (
-                    <motion.button
-                      key={search.id}
-                      onClick={() => handleRecentAddressClick(search.address)}
-                      className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Clock className="text-gray-400 flex-shrink-0" size={20} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{search.address}</p>
-                        <p className="text-sm text-gray-500 truncate">{search.description}</p>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </ScrollableSection>
-            )}
-          </motion.div>
         </div>
       </DraggablePanel>
-
-      {/* Sticky search header when panel is compressed */}
-      {snapIndex <= 0 && (
-        <AnimatedSearchHeader
-          panelHeight={panelHeight}
-          maxHeight={maxPanelHeight}
-          minHeight={minPanelHeight}
-          onWhereToClick={handleWhereToClick}
-          onScheduleClick={() => navigate('/schedule-ride')}
-        />
-      )}
 
       <BottomNavigation />
     </div>
